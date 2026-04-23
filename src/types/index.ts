@@ -80,6 +80,24 @@ export interface ChatMessageDto {
   content: string
 }
 
+export interface AiConfigDto {
+  apiKey: string
+  modelId: string
+  endpoint?: string
+  provider?: string
+}
+
+export interface AiConfigSaveDto {
+  apiKey: string
+  modelId: string
+  endpoint?: string
+  provider?: string
+}
+
+export interface AiConfigStatusDto {
+  isConfigured: boolean
+}
+
 export interface ChatRequestDto {
   message: string
   conversationId?: string

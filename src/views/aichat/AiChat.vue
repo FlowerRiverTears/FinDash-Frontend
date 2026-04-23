@@ -1,7 +1,8 @@
 <script setup lang="ts">
 import { ref, nextTick, onMounted } from 'vue'
-import { aiChatApi } from '@/api'
-import { Promotion, Delete, ChatDotRound } from '@element-plus/icons-vue'
+import { aiChatApi, aiConfigApi } from '@/api'
+import { Promotion, Delete, ChatDotRound, Setting } from '@element-plus/icons-vue'
+import AiConfigDialog from './AiConfigDialog.vue'
 
 interface ChatMessage {
   role: 'user' | 'assistant'
@@ -15,6 +16,8 @@ const inputMessage = ref('')
 const isLoading = ref(false)
 const chatContainerRef = ref<HTMLElement | null>(null)
 const conversationId = ref<string | undefined>(undefined)
+const aiConfigRef = ref<InstanceType<typeof AiConfigDialog> | null>(null)
+const isConfigured = ref(false)
 
 const quickQuestions = [
   '我近3个月的花销是多少？',
@@ -23,6 +26,19 @@ const quickQuestions = [
   '如何减少开支？给我一些建议',
   '我今年的总收入和总支出是多少？'
 ]
+
+const checkConfig = async () => {
+  try {
+    const result = await aiConfigApi.getStatus()
+    isConfigured.value = result.success && !!result.data?.isConfigured
+  } catch {
+    isConfigured.value = false
+  }
+}
+
+const openAiConfig = () => {
+  aiConfigRef.value?.open()
+}
 
 const scrollToBottom = async () => {
   await nextTick()
@@ -34,6 +50,16 @@ const scrollToBottom = async () => {
 const sendMessage = async (content?: string) => {
   const messageText = content || inputMessage.value.trim()
   if (!messageText || isLoading.value) return
+
+  if (!isConfigured.value) {
+    messages.value.push({
+      role: 'assistant',
+      content: '请先配置 AI 服务。点击上方 ⚙️ 设置按钮，填入您的 API 密钥和模型信息即可开始使用。',
+      timestamp: new Date()
+    })
+    await scrollToBottom()
+    return
+  }
 
   messages.value.push({
     role: 'user',
@@ -89,6 +115,23 @@ const handleKeyDown = (e: KeyboardEvent) => {
 const clearChat = () => {
   messages.value = []
   conversationId.value = undefined
+  initWelcome()
+}
+
+const initWelcome = () => {
+  if (isConfigured.value) {
+    messages.value.push({
+      role: 'assistant',
+      content: '你好！我是 FinDash 智能财务助手 💰\n\n我可以帮你：\n• 查询月度/年度花销数据\n• 分析各分类消费占比\n• 对比不同时间段的消费趋势\n• 提供节支建议和优化方案\n\n请问有什么可以帮你的？',
+      timestamp: new Date()
+    })
+  } else {
+    messages.value.push({
+      role: 'assistant',
+      content: '你好！我是 FinDash 智能财务助手 💰\n\n在使用之前，请先配置您的 AI 服务：\n\n1. 点击上方 ⚙️ 设置按钮\n2. 选择服务提供商并填入 API 密钥\n3. 点击"测试连接"验证配置\n4. 保存后即可开始对话\n\n配置保存后，下次登录无需重新配置。',
+      timestamp: new Date()
+    })
+  }
 }
 
 const formatMessage = (content: string) => {
@@ -103,12 +146,17 @@ const formatMessage = (content: string) => {
     .replace(/💡/g, '<span class="tip">💡</span>')
 }
 
-onMounted(() => {
-  messages.value.push({
-    role: 'assistant',
-    content: '你好！我是 FinDash 智能财务助手 💰\n\n我可以帮你：\n• 查询月度/年度花销数据\n• 分析各分类消费占比\n• 对比不同时间段的消费趋势\n• 提供节支建议和优化方案\n\n请问有什么可以帮你的？',
-    timestamp: new Date()
-  })
+const onConfigChanged = async (configured: boolean) => {
+  isConfigured.value = configured
+  if (messages.value.length <= 1) {
+    messages.value = []
+    initWelcome()
+  }
+}
+
+onMounted(async () => {
+  await checkConfig()
+  initWelcome()
 })
 </script>
 
@@ -118,12 +166,21 @@ onMounted(() => {
       <div class="chat-header-left">
         <el-icon :size="22" color="#409eff"><ChatDotRound /></el-icon>
         <span class="chat-title">智能财务助手</span>
-        <el-tag size="small" type="success" effect="light">AI</el-tag>
+        <el-tag size="small" :type="isConfigured ? 'success' : 'warning'" effect="light">
+          {{ isConfigured ? '已连接' : '未配置' }}
+        </el-tag>
       </div>
-      <el-button text type="danger" @click="clearChat" :disabled="messages.length <= 1">
-        <el-icon><Delete /></el-icon>
-        清空对话
-      </el-button>
+      <div class="chat-header-right">
+        <el-tooltip content="AI 服务配置" placement="bottom">
+          <el-button text circle class="header-config-btn" @click="openAiConfig">
+            <el-icon :size="18"><Setting /></el-icon>
+          </el-button>
+        </el-tooltip>
+        <el-button text type="danger" @click="clearChat" :disabled="messages.length <= 1">
+          <el-icon><Delete /></el-icon>
+          清空对话
+        </el-button>
+      </div>
     </div>
 
     <div class="chat-body" ref="chatContainerRef">
@@ -168,7 +225,7 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="chat-quick-questions" v-if="messages.length <= 1">
+    <div class="chat-quick-questions" v-if="isConfigured && messages.length <= 1">
       <div class="quick-label">快速提问：</div>
       <div class="quick-list">
         <el-button
@@ -183,7 +240,14 @@ onMounted(() => {
       </div>
     </div>
 
-    <div class="chat-input">
+    <div class="chat-unconfigured" v-if="!isConfigured">
+      <el-button type="primary" @click="openAiConfig">
+        <el-icon><Setting /></el-icon>
+        配置 AI 服务
+      </el-button>
+    </div>
+
+    <div class="chat-input" v-if="isConfigured">
       <el-input
         v-model="inputMessage"
         type="textarea"
@@ -202,6 +266,8 @@ onMounted(() => {
         @click="sendMessage()"
       />
     </div>
+
+    <AiConfigDialog ref="aiConfigRef" @configured="(v: boolean) => onConfigChanged(v)" />
   </div>
 </template>
 
@@ -234,9 +300,23 @@ onMounted(() => {
   gap: 10px;
 }
 
+.chat-header-right {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
 .chat-title {
   font-size: 18px;
   font-weight: 600;
+}
+
+.header-config-btn {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+.header-config-btn:hover {
+  color: white !important;
 }
 
 .chat-header :deep(.el-button) {
@@ -364,6 +444,13 @@ onMounted(() => {
 
 .quick-list .el-button {
   font-size: 12px;
+}
+
+.chat-unconfigured {
+  padding: 16px 24px;
+  border-top: 1px solid #ebeef5;
+  background: #fdf6ec;
+  text-align: center;
 }
 
 .chat-input {

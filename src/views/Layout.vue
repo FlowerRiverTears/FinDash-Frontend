@@ -6,13 +6,19 @@ import { ElMessageBox } from 'element-plus'
 import {
   TrendCharts, DataAnalysis, Menu, Wallet,
   SwitchButton, Fold, Expand, ArrowDown,
-  ChatDotRound
+  ChatDotRound, Setting
 } from '@element-plus/icons-vue'
+import AiConfigDialog from '@/views/aichat/AiConfigDialog.vue'
 
 const route = useRoute()
 const router = useRouter()
 const userStore = useUserStore()
 const isCollapsed = ref(false)
+const aiConfigRef = ref<InstanceType<typeof AiConfigDialog> | null>(null)
+
+const openAiConfig = () => {
+  aiConfigRef.value?.open()
+}
 
 const activeMenu = computed(() => {
   if (route.path === '/' || route.path === '') return '/'
@@ -118,6 +124,11 @@ watch(() => route.path, () => {
           <span class="header-title">{{ pageTitle }}</span>
         </div>
         <div class="header-right">
+          <el-tooltip content="AI 服务配置" placement="bottom">
+            <el-button text circle class="ai-config-btn" @click="openAiConfig">
+              <el-icon :size="18"><Setting /></el-icon>
+            </el-button>
+          </el-tooltip>
           <el-dropdown trigger="click">
             <div class="user-dropdown">
               <el-avatar :size="32" class="header-avatar">
@@ -146,6 +157,8 @@ watch(() => route.path, () => {
         </router-view>
       </el-main>
     </el-container>
+
+    <AiConfigDialog ref="aiConfigRef" />
   </el-container>
 </template>
 
@@ -296,6 +309,16 @@ watch(() => route.path, () => {
 .header-right {
   display: flex;
   align-items: center;
+  gap: 8px;
+}
+
+.ai-config-btn {
+  color: #606266;
+  transition: color 0.3s;
+}
+
+.ai-config-btn:hover {
+  color: #409eff;
 }
 
 .user-dropdown {

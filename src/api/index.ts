@@ -23,4 +23,4 @@ const recordApi = {
 export { recordApi }
 export { userApi } from './user'
 export { categoryApi } from './category'
-export { aiChatApi } from './aichat'
+export { aiChatApi, aiConfigApi } from './aichat'
