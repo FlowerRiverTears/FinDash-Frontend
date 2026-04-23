@@ -5,7 +5,8 @@ import { useUserStore } from '@/stores'
 import { ElMessageBox } from 'element-plus'
 import {
   TrendCharts, DataAnalysis, Menu, Wallet,
-  SwitchButton, Fold, Expand, ArrowDown
+  SwitchButton, Fold, Expand, ArrowDown,
+  ChatDotRound
 } from '@element-plus/icons-vue'
 
 const route = useRoute()
@@ -77,6 +78,10 @@ watch(() => route.path, () => {
         <el-menu-item index="/record">
           <el-icon><Wallet /></el-icon>
           <template #title>账目记录</template>
+        </el-menu-item>
+        <el-menu-item index="/ai-chat">
+          <el-icon><ChatDotRound /></el-icon>
+          <template #title>智能助手</template>
         </el-menu-item>
       </el-menu>
 

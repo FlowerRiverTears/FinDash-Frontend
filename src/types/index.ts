@@ -53,6 +53,7 @@ export interface RecordDto {
   price: number
   categoryId: number
   categoryName: string
+  createdAt: string
 }
 
 export interface CreateRecordDto {
@@ -72,4 +73,21 @@ export interface RecordUpdateDto {
 export interface ActionResult {
   success: boolean
   message: string
+}
+
+export interface ChatMessageDto {
+  role: string
+  content: string
+}
+
+export interface ChatRequestDto {
+  message: string
+  conversationId?: string
+  history?: ChatMessageDto[]
+}
+
+export interface ChatResponseDto {
+  reply: string
+  conversationId?: string
+  timestamp: string
 }
