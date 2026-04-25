@@ -6,7 +6,7 @@ import { useUserStore } from '@/stores/user'
 
 const request = axios.create({
   baseURL: '/api',
-  timeout: 15000,
+  timeout: 60000,
   headers: {
     'Content-Type': 'application/json'
   }

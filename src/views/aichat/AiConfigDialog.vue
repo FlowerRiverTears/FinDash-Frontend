@@ -53,7 +53,7 @@ const loadConfig = async () => {
     if (result.success && result.data) {
       hasExistingConfig.value = true
       config.value = {
-        apiKey: result.data.apiKey,
+        apiKey: '',
         modelId: result.data.modelId,
         endpoint: result.data.endpoint || '',
         provider: result.data.provider || ''
@@ -69,7 +69,7 @@ const loadConfig = async () => {
 }
 
 const saveConfig = async () => {
-  if (!config.value.apiKey.trim()) {
+  if (!config.value.apiKey.trim() && !hasExistingConfig.value) {
     ElMessage.warning('请输入 API 密钥')
     return
   }
@@ -97,7 +97,7 @@ const saveConfig = async () => {
 }
 
 const testConnection = async () => {
-  if (!config.value.apiKey.trim() || !config.value.modelId.trim()) {
+  if ((!config.value.apiKey.trim() && !hasExistingConfig.value) || !config.value.modelId.trim()) {
     ElMessage.warning('请先填写 API 密钥和模型 ID')
     return
   }

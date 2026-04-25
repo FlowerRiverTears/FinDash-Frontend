@@ -4,7 +4,7 @@ import type { ChatRequestDto, ChatResponseDto, AiConfigDto, AiConfigSaveDto, AiC
 
 export const aiChatApi = {
   sendMessage(data: ChatRequestDto) {
-    return apiCall<ChatResponseDto>(() => request.post('/AiChat', data), 'AI回复失败')
+    return apiCall<ChatResponseDto>(() => request.post('/AiChat', data, { timeout: 120000 }), 'AI回复失败')
   }
 }
 
@@ -22,7 +22,7 @@ export const aiConfigApi = {
   },
 
   testConfig(data: AiConfigSaveDto) {
-    return apiCall<void>(() => request.post('/AiConfig/test', data), '配置验证失败')
+    return apiCall<void>(() => request.post('/AiConfig/test', data, { timeout: 60000 }), '配置验证失败')
   },
 
   getStatus() {
