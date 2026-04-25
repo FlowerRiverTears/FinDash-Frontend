@@ -1,6 +1,8 @@
 import axios from 'axios'
 import { ElMessage } from 'element-plus'
 import type { ApiResponse } from '@/types'
+import router from '@/router'
+import { useUserStore } from '@/stores/user'
 
 const request = axios.create({
   baseURL: '/api',
@@ -9,6 +11,8 @@ const request = axios.create({
     'Content-Type': 'application/json'
   }
 })
+
+let isRedirecting = false
 
 request.interceptors.request.use(
   (config) => {
@@ -27,10 +31,19 @@ request.interceptors.response.use(
     if (error.response) {
       const { status, data } = error.response
       if (status === 401) {
-        localStorage.removeItem('token')
-        localStorage.removeItem('userInfo')
-        ElMessage.error('登录已过期，请重新登录')
-        window.location.href = '/login'
+        const currentToken = localStorage.getItem('token')
+        if (currentToken && !isRedirecting) {
+          isRedirecting = true
+          const userStore = useUserStore()
+          userStore.token = ''
+          userStore.userInfo = null
+          localStorage.removeItem('token')
+          localStorage.removeItem('userInfo')
+          ElMessage.error('登录已过期，请重新登录')
+          router.push('/login').finally(() => {
+            isRedirecting = false
+          })
+        }
       } else if (status === 403) {
         ElMessage.error('没有权限执行此操作')
       } else if (status === 404) {
