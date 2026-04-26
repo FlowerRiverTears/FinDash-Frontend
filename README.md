@@ -99,7 +99,6 @@ FinDash-Frontend 是 FinDash 智能财务助手平台的前端部分，基于 Vu
 | Vue Router | 4.3 | 路由管理 |
 | Axios | 1.7 | HTTP 请求 |
 | ECharts | 5.5 | 数据可视化 |
-| Three.js | 0.170 | 3D 渲染 |
 
 ---
 
